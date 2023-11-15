@@ -8,13 +8,17 @@ b.dewhirst@gmail.com
 ## purpose
 This project is intended to allow me to review (refresh) PySpark, create helper classes, etc.
 
-Initially, it will likely be spartan/incomplete
+Initially, it will likely be spartan/incomplete. I'll be doing a lot of refactoring, so it won't (obviously) match the original demo. (It follows it step by step, but makes it clear what's imported from where and doesn't run as a single 'notebook' style script.)
 
 ## incomplete disclaimers
 Yes, PySpark really only makes sense if you're accessing a distributed processing system. This project may not practically utilize one. (TBD)
 
 ## quick references (the tutorial I'm following/paraphrasing)
 https://www.datacamp.com/tutorial/pyspark-tutorial-getting-started-with-pyspark
+
+### other tutorials to consider reviewing:
+- https://www.guru99.com/pyspark-tutorial.html
+- https://sparkbyexamples.com/pyspark-tutorial/
 
 ## tldr:
 ### install spark
