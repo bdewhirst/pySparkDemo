@@ -33,3 +33,10 @@ https://www.datacamp.com/tutorial/pyspark-tutorial-getting-started-with-pyspark
 ### debugging notes:
 - key debugging step was to add C:/.../java/jdk-vvv/bin <-- ***bin*** was the missing/critical detail
 - possibly-optional/ possibly necessary step was setting environment variables at the System rather than User level
+- possibly-optional-- I cleared out old/stale versions of oracle from System Path
+- winutils isn't installed, which java warns about-- this tutorial doesn't mention it, others do-- something to keep in mind
+
+### intent:
+- follow the tutorial
+- refactor the tutorial
+- refactor again (etc.)
