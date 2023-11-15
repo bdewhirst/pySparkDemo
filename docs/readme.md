@@ -43,4 +43,11 @@ https://www.datacamp.com/tutorial/pyspark-tutorial-getting-started-with-pyspark
 ### intent:
 - follow the tutorial
 - refactor the tutorial
-- refactor again (etc.)
+- refactor again after it is done
+
+
+### TODO:
+- rather than all this spark=spark stuff, refactor into classes
+- review / test user defined functions
+- review 'ignite' framing
+- review shipping environments-- how is that done these days?

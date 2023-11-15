@@ -100,7 +100,7 @@ def recency_analysis(
         on="recency",
         how="leftsemi",
     )
-    recency.show(n=5, truncate=0)
+    # recency.show(n=5, truncate=0)
     # recency.printSchema()
     return recency
 
@@ -111,7 +111,7 @@ def freq_analysis(
     freq_peek = data.groupby("CustomerID").agg(
         pyspark.sql.functions.count("InvoiceDate").alias("frequency")
     )
-    freq_peek.show(5, 0)
+    # freq_peek.show(5, 0)
 
     freq = data.join(freq_peek, on="CustomerID", how="inner")
     # freq.printSchema()
@@ -121,18 +121,83 @@ def freq_analysis(
 def monetary_analysis(
     spark: pyspark.sql.SparkSession, data: pyspark.sql.DataFrame
 ) -> pyspark.sql.DataFrame:
-    m_val = data.withColumn('TotalAmount',pyspark.sql.functions.col("Quantity") * pyspark.sql.functions.col("UnitPrice"))
-    m_val = m_val.groupBy('CustomerID').agg(pyspark.sql.functions.sum('TotalAmount').alias('monetary_value'))
+    m_val = data.withColumn(
+        "TotalAmount",
+        pyspark.sql.functions.col("Quantity") * pyspark.sql.functions.col("UnitPrice"),
+    )
+    m_val = m_val.groupBy("CustomerID").agg(
+        pyspark.sql.functions.sum("TotalAmount").alias("monetary_value")
+    )
     return m_val
 
+
 def finalize_rfm(
-    spark: pyspark.sql.SparkSession, data0: pyspark.sql.DataFrame, data1: pyspark.sql.DataFrame,
+    spark: pyspark.sql.SparkSession,
+    data0: pyspark.sql.DataFrame,
+    data1: pyspark.sql.DataFrame,
 ) -> pyspark.sql.DataFrame:
     final_data = data0.join(data1, on="CustomerID", how="inner")
-    final_data = final_data.select(['recency', 'frequency', 'monetary_value', 'CustomerID']).distinct()
-    final_data.show(5,0)
+    final_data = final_data.select(
+        ["recency", "frequency", "monetary_value", "CustomerID"]
+    ).distinct()
+    # final_data.show(5, 0)
     return final_data
 
+
+def standardize(
+    spark: pyspark.sql.SparkSession, data: pyspark.sql.DataFrame
+) -> pyspark.sql.DataFrame:
+    # scale these features and return the result
+    from pyspark.ml.feature import VectorAssembler
+    from pyspark.ml.feature import StandardScaler
+
+    assemble = VectorAssembler(
+        inputCols=["recency", "frequency", "monetary_value"], outputCol="features"
+    )
+
+    assembled_data = assemble.transform(data)
+
+    scale = StandardScaler(inputCol="features", outputCol="standardized")
+    data_scale = scale.fit(assembled_data)
+    data_scale_output = data_scale.transform(assembled_data)
+    # data_scale_output.select("standardized").show(2, truncate=False)
+    return data_scale_output
+
+
+def build_mach_learn_model(
+    spark: pyspark.sql.SparkSession, data: pyspark.sql.DataFrame
+) -> pyspark.sql.DataFrame:
+    # this part, I'm not planning on refactoring-- it switches over to pandas/workflows I'm not focusing on here
+    from pyspark.ml.clustering import KMeans
+    from pyspark.ml.evaluation import ClusteringEvaluator
+    import numpy as np
+
+    cost = np.zeros(10)
+
+    evaluator = ClusteringEvaluator(
+        predictionCol="prediction",
+        featuresCol="standardized",
+        metricName="silhouette",
+        distanceMeasure="squaredEuclidean",
+    )
+
+    for i in range(2, 10):
+        KMeans_algo = KMeans(featuresCol="standardized", k=i)
+        KMeans_fit = KMeans_algo.fit(data)
+        output = KMeans_fit.transform(data)
+        cost[i] = KMeans_fit.summary.trainingCost
+
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    df_cost = pd.DataFrame(cost[2:])
+    df_cost.columns = ["cost"]
+    new_col = range(2, 10)
+    df_cost.insert(0, 'cluster', new_col)
+    plt.plot(df_cost.cluster, df_cost.cost)
+    plt.xlabel('Number of Clusters')
+    plt.ylabel('Score')
+    plt.title('Elbow Curve')
+    plt.show()
 
 
 def main() -> None:
@@ -145,16 +210,15 @@ def main() -> None:
     # early_analysis(spark=spark, data=ecomm_data)
     # next_analysis(spark=spark, data=ecomm_data)
 
-    # prep for machine learning:
+    # prep for machine learning with RFM-- recency, frequency, monetary aggs:
     recency = recency_analysis(spark=spark, data=ecomm_data)
     frequency = freq_analysis(spark=spark, data=recency)
     monetary = monetary_analysis(spark=spark, data=frequency)
+    final_rfm_data = finalize_rfm(spark=spark, data0=monetary, data1=frequency)
 
-    final_data = finalize_rfm(spark=spark, data0=monetary, data1=frequency)
+    standardized = standardize(spark=spark, data=final_rfm_data)
 
-
-
-
+    build_mach_learn_model(spark=spark, data=standardized)
 
 if __name__ == "__main__":
     main()
