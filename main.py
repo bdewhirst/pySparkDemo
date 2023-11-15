@@ -168,6 +168,8 @@ def build_mach_learn_model(
     spark: pyspark.sql.SparkSession, data: pyspark.sql.DataFrame
 ) -> pyspark.sql.DataFrame:
     # this part, I'm not planning on refactoring-- it switches over to pandas/workflows I'm not focusing on here
+
+    # figure out what K to use for K-means:
     from pyspark.ml.clustering import KMeans
     from pyspark.ml.evaluation import ClusteringEvaluator
     import numpy as np
@@ -198,6 +200,28 @@ def build_mach_learn_model(
     plt.ylabel('Score')
     plt.title('Elbow Curve')
     plt.show()
+
+    # build k-means cluster model
+    KMeans_algo = KMeans(featuresCol='standardized', k=4)
+    KMeans_fit = KMeans_algo.fit(data)
+
+    preds=KMeans_fit.transform(data)
+
+    preds.show(5,0)
+
+    # cluster analysis
+    import seaborn as sns
+
+    df_viz = preds.select('recency', 'frequency', 'monetary_value', 'prediction')
+    df_viz = df_viz.toPandas()
+    avg_df = df_viz.groupby(['prediction'], as_index=False).mean()
+
+    list1 = ['recency', 'frequency', 'monetary_value']
+
+    for i in list1:
+        sns.barplot(x='prediction', y=str(i), data=avg_df)
+        plt.show()
+
 
 
 def main() -> None:

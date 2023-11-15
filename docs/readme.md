@@ -2,7 +2,7 @@
 
 ## me
 Brian Dewhirst
-2023-11-09
+2023-11-15
 b.dewhirst@gmail.com
 
 ## purpose
@@ -51,3 +51,6 @@ https://www.datacamp.com/tutorial/pyspark-tutorial-getting-started-with-pyspark
 - review / test user defined functions
 - review 'ignite' framing
 - review shipping environments-- how is that done these days?
+
+### Final thoughts (for now)
+- I've used this tutorial to refresh on PySpark and to confirm I've got it running locally
