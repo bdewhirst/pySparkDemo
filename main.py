@@ -80,9 +80,7 @@ def recency_analysis(
     # assign recency score to each customer
 
     spark.sql("set spark.sql.legacy.timeParserPolicy=LEGACY")  # see if this fixes issue
-    data = data.withColumn(
-        "from_date", pyspark.sql.functions.lit("12/01/10 08:26")
-    )
+    data = data.withColumn("from_date", pyspark.sql.functions.lit("12/01/10 08:26"))
     data = data.withColumn(
         "from_date", pyspark.sql.functions.to_timestamp("from_date", "yy/MM/dd HH:mm")
     )
@@ -95,18 +93,30 @@ def recency_analysis(
         - pyspark.sql.functions.col("from_date").cast("long"),
     )
 
-    recency = recency.join(recency.groupBy('CustomerID').agg(pyspark.sql.functions.max('recency').alias('recency')), on='recency', how='leftsemi')
+    recency = recency.join(
+        recency.groupBy("CustomerID").agg(
+            pyspark.sql.functions.max("recency").alias("recency")
+        ),
+        on="recency",
+        how="leftsemi",
+    )
     recency.show(n=5, truncate=0)
-    # aside:
     recency.printSchema()
     return recency
 
 
 def freq_analysis(
     spark: pyspark.sql.SparkSession, data: pyspark.sql.DataFrame
-) -> None:
-    freq = data.groupby("CustomerID").agg(pyspark.sql.functions.count('InvoiceDate').alias('frequency'))
-    freq.show(5,0)
+) -> pyspark.sql.DataFrame:
+    freq_peek = data.groupby("CustomerID").agg(
+        pyspark.sql.functions.count("InvoiceDate").alias("frequency")
+    )
+    freq_peek.show(5, 0)
+
+    freq = data.join(freq_peek, on="CustomerID", how="inner")
+    freq.printSchema()
+    return freq
+
 
 def main() -> None:
     # see readme.md; this is (initially) from a tutorial.
@@ -123,8 +133,6 @@ def main() -> None:
     # prep for machine learning:
     recency = recency_analysis(spark=spark, data=ecomm_data)
     freq_analysis(spark=spark, data=recency)
-
-
 
 
 if __name__ == "__main__":
