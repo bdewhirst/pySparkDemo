@@ -101,7 +101,7 @@ def recency_analysis(
         how="leftsemi",
     )
     recency.show(n=5, truncate=0)
-    recency.printSchema()
+    # recency.printSchema()
     return recency
 
 
@@ -114,8 +114,25 @@ def freq_analysis(
     freq_peek.show(5, 0)
 
     freq = data.join(freq_peek, on="CustomerID", how="inner")
-    freq.printSchema()
+    # freq.printSchema()
     return freq
+
+
+def monetary_analysis(
+    spark: pyspark.sql.SparkSession, data: pyspark.sql.DataFrame
+) -> pyspark.sql.DataFrame:
+    m_val = data.withColumn('TotalAmount',pyspark.sql.functions.col("Quantity") * pyspark.sql.functions.col("UnitPrice"))
+    m_val = m_val.groupBy('CustomerID').agg(pyspark.sql.functions.sum('TotalAmount').alias('monetary_value'))
+    return m_val
+
+def finalize_rfm(
+    spark: pyspark.sql.SparkSession, data0: pyspark.sql.DataFrame, data1: pyspark.sql.DataFrame,
+) -> pyspark.sql.DataFrame:
+    final_data = data0.join(data1, on="CustomerID", how="inner")
+    final_data = final_data.select(['recency', 'frequency', 'monetary_value', 'CustomerID']).distinct()
+    final_data.show(5,0)
+    return final_data
+
 
 
 def main() -> None:
@@ -128,11 +145,15 @@ def main() -> None:
     # early_analysis(spark=spark, data=ecomm_data)
     # next_analysis(spark=spark, data=ecomm_data)
 
-    # ecomm_data = add_date(spark=spark, data=ecomm_data)  # needed for subsequent steps
-
     # prep for machine learning:
     recency = recency_analysis(spark=spark, data=ecomm_data)
-    freq_analysis(spark=spark, data=recency)
+    frequency = freq_analysis(spark=spark, data=recency)
+    monetary = monetary_analysis(spark=spark, data=frequency)
+
+    final_data = finalize_rfm(spark=spark, data0=monetary, data1=frequency)
+
+
+
 
 
 if __name__ == "__main__":
