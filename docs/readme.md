@@ -6,7 +6,7 @@ Brian Dewhirst
 b.dewhirst@gmail.com
 
 ## purpose
-This project is intended to allow me to review PySpark, create helper classes, etc.
+This project is intended to allow me to review (refresh) PySpark, create helper classes, etc.
 
 Initially, it will likely be spartan/incomplete
 
@@ -23,4 +23,13 @@ https://www.datacamp.com/tutorial/pyspark-tutorial-getting-started-with-pyspark
 - On Windows, set environment variable (admin permission, `setx SPARK_HOME "C:\spark\spark-3.X.Y-bin-hadoop3"` then `setx PATH "C:\spark\spark-3.X.Y-bin-hadoop3\bin"`)
 - (See above 'quick references' url for linux/mac instructions)
 
-### install pyspark (`python -m pip install pyspark` in an appropriate environment)
+### now, returning to PyCharm/ the project "here":
+- install pyspark (`python -m pip install pyspark` in an appropriate environment)
+- install other minimal expected requirements (e.g., pandas, numpy etc.)
+- start tutorial
+- (resolve "java not found" error if necessary https://www.freecodecamp.org/news/how-to-install-java-on-windows-- apparent bug: JAVA_HOME should not end in /bin?)
+- resume tutorial
+
+### debugging notes:
+- key debugging step was to add C:/.../java/jdk-vvv/bin <-- ***bin*** was the missing/critical detail
+- possibly-optional/ possibly necessary step was setting environment variables at the System rather than User level

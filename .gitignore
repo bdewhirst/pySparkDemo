@@ -1,1 +1,4 @@
 .idea/*
+
+# ignore files meant to be local by default
+*.csv
